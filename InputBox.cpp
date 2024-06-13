@@ -9,6 +9,44 @@ static HWND g_hWndCancelButton;
 static LPTSTR g_lpszInputText;
 static LPTSTR g_lpszTitle;
 
+BOOL InputBoxWindowMove( HWND hWndMain, int nLeft, int nTop )
+{
+	BOOL bResult = FALSE;
+
+	int nDesktopWindowWidth;
+	int nDesktopWindowHeight;
+	int nMaximumLeft;
+	int nMaximumTop;
+	RECT rcWorkArea;
+
+	// Get work area size
+	SystemParametersInfo( SPI_GETWORKAREA, 0, &rcWorkArea, 0 );
+
+	// Calculate desktop window size
+	nDesktopWindowWidth		= ( rcWorkArea.right - rcWorkArea.left );
+	nDesktopWindowHeight	= ( rcWorkArea.bottom - rcWorkArea.top );
+
+	// Calculate maximum window position
+	nMaximumLeft	= ( nDesktopWindowWidth - INPUT_BOX_WINDOW_WIDTH );
+	nMaximumTop		= ( nDesktopWindowHeight - INPUT_BOX_WINDOW_HEIGHT );
+
+	// Limit window position to fit on screen
+	nLeft	= ( ( nLeft < 0 ) ? 0 : nLeft );
+	nTop	= ( ( nTop < 0 ) ? 0 : nTop );
+	nLeft	= ( ( nLeft > nMaximumLeft ) ? nMaximumLeft : nLeft );
+	nTop	= ( ( nTop > nMaximumTop ) ? nMaximumTop : nTop );
+
+	// Move window
+	bResult = SetWindowPos( hWndMain, NULL, nLeft, nTop, 0, 0, ( SWP_NOSIZE | SWP_NOOWNERZORDER ) );
+
+	// Save window position
+	RegistrySetValue( INPUT_BOX_REGISTRY_TOP_LEVEL_KEY, INPUT_BOX_REGISTRY_SUB_KEY, INPUT_BOX_REGISTRY_LEFT_VALUE_NAME, nLeft );
+	RegistrySetValue( INPUT_BOX_REGISTRY_TOP_LEVEL_KEY, INPUT_BOX_REGISTRY_SUB_KEY, INPUT_BOX_REGISTRY_TOP_VALUE_NAME, nTop );
+
+	return bResult;
+
+} // End of function InputBoxWindowMove
+
 // Input box window procedure
 LRESULT CALLBACK InputBoxWndProc( HWND hWndInputBox, UINT uMessage, WPARAM wParam, LPARAM lParam )
 {
@@ -241,13 +279,22 @@ BOOL InputBox( HWND hWndParent, LPTSTR lpszInputText, LPCTSTR lpszTitle )
 		HWND hWndInputBox;
 
 		// Create input box window
-		hWndInputBox = CreateWindowEx( INPUT_BOX_WINDOW_EXTENDED_STYLE, INPUT_BOX_WINDOW_CLASS_NAME, lpszTitle, INPUT_BOX_WINDOW_STYLE, CW_USEDEFAULT, CW_USEDEFAULT,  CW_USEDEFAULT, CW_USEDEFAULT, hWndParent, NULL, hInstance, NULL );
+		hWndInputBox = CreateWindowEx( INPUT_BOX_WINDOW_EXTENDED_STYLE, INPUT_BOX_WINDOW_CLASS_NAME, lpszTitle, INPUT_BOX_WINDOW_STYLE, INPUT_BOX_WINDOW_DEFAULT_LEFT, INPUT_BOX_WINDOW_DEFAULT_TOP, INPUT_BOX_WINDOW_WIDTH, INPUT_BOX_WINDOW_HEIGHT, hWndParent, NULL, hInstance, NULL );
 
 		// Ensure that input box window was created
 		if( hWndInputBox )
 		{
 			// Successfully created input box window
 			MSG msg;
+			int nLeft;
+			int nTop;
+
+			// Get initial window position
+			nLeft	= RegistryGetValue( INPUT_BOX_REGISTRY_TOP_LEVEL_KEY, INPUT_BOX_REGISTRY_SUB_KEY, INPUT_BOX_REGISTRY_LEFT_VALUE_NAME, INPUT_BOX_WINDOW_DEFAULT_LEFT );
+			nTop	= RegistryGetValue( INPUT_BOX_REGISTRY_TOP_LEVEL_KEY, INPUT_BOX_REGISTRY_SUB_KEY, INPUT_BOX_REGISTRY_TOP_VALUE_NAME, INPUT_BOX_WINDOW_DEFAULT_TOP );
+
+			// Move window
+			InputBoxWindowMove( hWndInputBox, nLeft, nTop );
 
 			// Clear message structure
 			ZeroMemory( &msg, sizeof( msg ) );
