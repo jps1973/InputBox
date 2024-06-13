@@ -14,7 +14,19 @@ int WINAPI WinMain( HINSTANCE, HINSTANCE, LPTSTR, int )
 	if( InputBox( NULL, lpszInputText ) )
 	{
 		// Successfully got input
+
+		// Display input text
+		MessageBox( NULL, lpszInputText, "Updated", MB_OK );
+
 	} // End of successfully got input
+	else
+	{
+		// Unable to get input
+
+		// Display input text
+		MessageBox( NULL, lpszInputText, "Not updated", MB_OK );
+
+	} // End of unable to get input
 
 	// Free string memory
 	delete [] lpszInputText;
