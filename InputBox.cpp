@@ -9,7 +9,7 @@ static HWND g_hWndCancelButton;
 static LPTSTR g_lpszInputText;
 static LPTSTR g_lpszTitle;
 
-BOOL InputBoxWindowMove( HWND hWndMain, int nLeft, int nTop )
+BOOL InputBoxWindowMove( HWND hWndInputBox, int nLeft, int nTop )
 {
 	BOOL bResult = FALSE;
 
@@ -37,7 +37,7 @@ BOOL InputBoxWindowMove( HWND hWndMain, int nLeft, int nTop )
 	nTop	= ( ( nTop > nMaximumTop ) ? nMaximumTop : nTop );
 
 	// Move window
-	bResult = SetWindowPos( hWndMain, NULL, nLeft, nTop, 0, 0, ( SWP_NOSIZE | SWP_NOOWNERZORDER ) );
+	bResult = SetWindowPos( hWndInputBox, NULL, nLeft, nTop, 0, 0, ( SWP_NOSIZE | SWP_NOOWNERZORDER ) );
 
 	// Save window position
 	RegistrySetValue( INPUT_BOX_REGISTRY_TOP_LEVEL_KEY, INPUT_BOX_REGISTRY_SUB_KEY, INPUT_BOX_REGISTRY_LEFT_VALUE_NAME, nLeft );
@@ -51,6 +51,9 @@ BOOL InputBoxWindowMove( HWND hWndMain, int nLeft, int nTop )
 LRESULT CALLBACK InputBoxWndProc( HWND hWndInputBox, UINT uMessage, WPARAM wParam, LPARAM lParam )
 {
 	LRESULT lr = 0;
+
+	static int s_nClickX;
+	static int s_nClickY;
 
 	// Select message
 	switch( uMessage )
@@ -149,6 +152,74 @@ LRESULT CALLBACK InputBoxWndProc( HWND hWndInputBox, UINT uMessage, WPARAM wPara
 			break;
 
 		} // End of an activate message
+		case WM_LBUTTONDOWN:
+		{
+			// A left mouse button down message
+
+			// Set mouse capture to input box window
+			SetCapture( hWndInputBox );
+
+			// Store static variables
+			s_nClickX = GET_X_LPARAM( lParam );
+			s_nClickY = GET_Y_LPARAM( lParam );
+
+			// Break out of switch
+			break;
+
+		} // End of a left mouse button down message
+		case WM_LBUTTONUP:
+		{
+			// A left mouse button up message
+
+			// Release mouse capture
+			ReleaseCapture();
+
+			// Break out of switch
+			break;
+
+		} // End of a left mouse button up message
+		case WM_MOUSEMOVE:
+		{
+			// A mouse move message
+
+			// See if input box window has mouse capture
+			if( GetCapture() == hWndInputBox )
+			{
+				// Input box window has mouse capture
+				RECT rc;
+				int nMouseX;
+				int nMouseY;
+				int nWindowX;
+				int nWindowY;
+
+				// Get window position
+				GetWindowRect( hWndInputBox, &rc );
+
+				// Store mouse position
+				nMouseX = GET_X_LPARAM( lParam );
+				nMouseY = GET_Y_LPARAM( lParam );
+
+				// Calculate window position
+				nWindowX = ( ( rc.left + nMouseX ) - s_nClickX );
+				nWindowY = ( ( rc.top + nMouseY ) - s_nClickY );
+
+				// Move input box window
+				InputBoxWindowMove( hWndInputBox, nWindowX, nWindowY );
+
+			} // End of input box window has mouse capture
+			else
+			{
+				// Input box window does not have mouse capture
+
+				// Call default procedure
+				lr = DefWindowProc( hWndInputBox, uMessage, wParam, lParam );
+
+			} // End of input box window does not have mouse capture
+
+			// Break out of switch
+			break;
+
+		} // End of a mouse move message
 		case WM_COMMAND:
 		{
 			// A command message

@@ -3,6 +3,7 @@
 #pragma once
 
 #include <windows.h>
+#include <windowsx.h>
 #include <commctrl.h>
 
 #include "Ascii.h"
@@ -48,7 +49,7 @@
 #define INPUT_BOX_CANCEL_BUTTON_WINDOW_ID										( WM_USER + 1 )
 
 #define INPUT_BOX_REGISTRY_TOP_LEVEL_KEY										HKEY_CURRENT_USER
-#define INPUT_BOX_REGISTRY_SUB_KEY												"SOFTWARE\\Jim Smith\\InputBox"
+#define INPUT_BOX_REGISTRY_SUB_KEY												"Software\\Jim Smith\\InputBox"
 #define INPUT_BOX_REGISTRY_LEFT_VALUE_NAME										"Left"
 #define INPUT_BOX_REGISTRY_TOP_VALUE_NAME										"Top"
 
