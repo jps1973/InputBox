@@ -3,6 +3,7 @@
 #include "InputBox.h"
 
 // Global variables
+static HWND g_hWndTitle;
 static HWND g_hWndEdit;
 static HWND g_hWndOkButton;
 static HWND g_hWndCancelButton;
@@ -62,80 +63,97 @@ LRESULT CALLBACK InputBoxWndProc( HWND hWndInputBox, UINT uMessage, WPARAM wPara
 		{
 			// A create message
 			HINSTANCE hInstance;
+			int nTitleWindowWidth;
 			int nEditWindowWidth;
-			int nEditWindowHeight;
-			int nEditWindowLeft;
-			int nEditWindowTop;
 
 			// Get instance
 			hInstance = ( ( LPCREATESTRUCT )lParam )->hInstance;
 
-			// Calculate edit window size
-			nEditWindowWidth	= ( INPUT_BOX_WINDOW_WIDTH - ( INPUT_BOX_WINDOW_SEPARATOR_SIZE + INPUT_BOX_WINDOW_SEPARATOR_SIZE ) );
-			nEditWindowHeight	= INPUT_BOX_BUTTON_WINDOW_HEIGHT;
+			// Calculate title window width
+			nTitleWindowWidth = ( INPUT_BOX_WINDOW_WIDTH - ( INPUT_BOX_WINDOW_SEPARATOR_SIZE + INPUT_BOX_WINDOW_SEPARATOR_SIZE ) );
 
-			// Calculate edit window position
-			nEditWindowLeft		= INPUT_BOX_WINDOW_SEPARATOR_SIZE;
-			nEditWindowTop		= INPUT_BOX_WINDOW_SEPARATOR_SIZE;
+			// Create title window
+			g_hWndTitle = CreateWindowEx( INPUT_BOX_TITLE_WINDOW_EXTENDED_STYLE, INPUT_BOX_TITLE_WINDOW_CLASS_NAME, g_lpszTitle, INPUT_BOX_TITLE_WINDOW_STYLE, INPUT_BOX_WINDOW_SEPARATOR_SIZE, INPUT_BOX_WINDOW_SEPARATOR_SIZE, nTitleWindowWidth, INPUT_BOX_TITLE_WINDOW_HEIGHT, hWndInputBox, ( HMENU )NULL, hInstance, NULL );
 
-			// Create edit window
-			g_hWndEdit = CreateWindowEx( INPUT_BOX_EDIT_WINDOW_EXTENDED_STYLE, INPUT_BOX_EDIT_WINDOW_CLASS_NAME, g_lpszInputText, INPUT_BOX_EDIT_WINDOW_STYLE, nEditWindowLeft, nEditWindowTop, nEditWindowWidth, nEditWindowHeight, hWndInputBox, ( HMENU )NULL, hInstance, NULL );
-
-			// Ensure that edit window was created
-			if( g_hWndEdit )
+			// Ensure that title window was created
+			if( g_hWndTitle )
 			{
-				// Successfully created edit window
+				// Successfully created title window
 				HFONT hFont;
-				int nOkButtonWindowLeft;
-				int nButtonWindowTop;
+				int nEditWindowHeight;
+				int nEditWindowLeft;
+				int nEditWindowTop;
 
 				// Get font
 				hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
 
-				// Set edit window font
-				SendMessage( g_hWndEdit, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
+				// Set title window font
+				SendMessage( g_hWndTitle, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
-				// Calculate ok button window position
-				nOkButtonWindowLeft	= ( INPUT_BOX_WINDOW_WIDTH - ( INPUT_BOX_BUTTON_WINDOW_WIDTH + INPUT_BOX_WINDOW_SEPARATOR_SIZE + INPUT_BOX_BUTTON_WINDOW_WIDTH + INPUT_BOX_WINDOW_SEPARATOR_SIZE ) );
-				nButtonWindowTop	= ( nEditWindowTop + INPUT_BOX_BUTTON_WINDOW_HEIGHT + INPUT_BOX_WINDOW_SEPARATOR_SIZE );
+				// Calculate edit window size
+				nEditWindowWidth	= ( INPUT_BOX_WINDOW_WIDTH - ( WINDOW_BORDER_WIDTH + INPUT_BOX_WINDOW_SEPARATOR_SIZE + INPUT_BOX_WINDOW_SEPARATOR_SIZE + WINDOW_BORDER_WIDTH ) );
+				nEditWindowHeight	= INPUT_BOX_EDIT_WINDOW_HEIGHT;
 
-				// Create ok button window
-				g_hWndOkButton = CreateWindowEx( INPUT_BOX_BUTTON_WINDOW_EXTENDED_STYLE, INPUT_BOX_BUTTON_WINDOW_CLASS_NAME, INPUT_BOX_OK_BUTTON_WINDOW_TEXT, INPUT_BOX_BUTTON_WINDOW_STYLE, nOkButtonWindowLeft, nButtonWindowTop, INPUT_BOX_BUTTON_WINDOW_WIDTH, INPUT_BOX_BUTTON_WINDOW_HEIGHT, hWndInputBox, ( HMENU )INPUT_BOX_OK_BUTTON_WINDOW_ID, hInstance, NULL );
+				// Calculate edit window position
+				nEditWindowLeft		= INPUT_BOX_WINDOW_SEPARATOR_SIZE;
+				nEditWindowTop		= ( INPUT_BOX_WINDOW_SEPARATOR_SIZE + INPUT_BOX_TITLE_WINDOW_HEIGHT + INPUT_BOX_WINDOW_SEPARATOR_SIZE );
 
-				// Ensure that ok button window was created
-				if( g_hWndOkButton )
+				// Create edit window
+				g_hWndEdit = CreateWindowEx( INPUT_BOX_EDIT_WINDOW_EXTENDED_STYLE, INPUT_BOX_EDIT_WINDOW_CLASS_NAME, g_lpszInputText, INPUT_BOX_EDIT_WINDOW_STYLE, nEditWindowLeft, nEditWindowTop, nEditWindowWidth, nEditWindowHeight, hWndInputBox, ( HMENU )NULL, hInstance, NULL );
+
+				// Ensure that edit window was created
+				if( g_hWndEdit )
 				{
-					// Successfully created ok button window
-					int nCancelButtonWindowLeft;
+					// Successfully created edit window
+					int nOkButtonWindowLeft;
+					int nButtonWindowTop;
 
-					// Set ok button window font
-					SendMessage( g_hWndOkButton, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
+					// Set edit window font
+					SendMessage( g_hWndEdit, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
-					// Calculate cancel button window position
-					nCancelButtonWindowLeft	= ( nOkButtonWindowLeft + INPUT_BOX_BUTTON_WINDOW_WIDTH + INPUT_BOX_WINDOW_SEPARATOR_SIZE );
+					// Calculate ok button window position
+					nOkButtonWindowLeft	= ( ( nEditWindowLeft + nEditWindowWidth ) - ( INPUT_BOX_BUTTON_WINDOW_WIDTH + INPUT_BOX_WINDOW_SEPARATOR_SIZE + INPUT_BOX_BUTTON_WINDOW_WIDTH ) );
+					nButtonWindowTop	= ( nEditWindowTop + INPUT_BOX_EDIT_WINDOW_HEIGHT + INPUT_BOX_WINDOW_SEPARATOR_SIZE );
 
-					// Create cancel button window
-					g_hWndCancelButton = CreateWindowEx( INPUT_BOX_BUTTON_WINDOW_EXTENDED_STYLE, INPUT_BOX_BUTTON_WINDOW_CLASS_NAME, INPUT_BOX_CANCEL_BUTTON_WINDOW_TEXT, INPUT_BOX_BUTTON_WINDOW_STYLE, nCancelButtonWindowLeft, nButtonWindowTop, INPUT_BOX_BUTTON_WINDOW_WIDTH, INPUT_BOX_BUTTON_WINDOW_HEIGHT, hWndInputBox, ( HMENU )INPUT_BOX_CANCEL_BUTTON_WINDOW_ID, hInstance, NULL );
+					// Create ok button window
+					g_hWndOkButton = CreateWindowEx( INPUT_BOX_BUTTON_WINDOW_EXTENDED_STYLE, INPUT_BOX_BUTTON_WINDOW_CLASS_NAME, INPUT_BOX_OK_BUTTON_WINDOW_TEXT, INPUT_BOX_BUTTON_WINDOW_STYLE, nOkButtonWindowLeft, nButtonWindowTop, INPUT_BOX_BUTTON_WINDOW_WIDTH, INPUT_BOX_BUTTON_WINDOW_HEIGHT, hWndInputBox, ( HMENU )INPUT_BOX_OK_BUTTON_WINDOW_ID, hInstance, NULL );
 
-					// Ensure that cancel button window was created
-					if( g_hWndCancelButton )
+					// Ensure that ok button window was created
+					if( g_hWndOkButton )
 					{
-						// Successfully created cancel button window
+						// Successfully created ok button window
+						int nCancelButtonWindowLeft;
 
-						// Set cancel button window font
-						SendMessage( g_hWndCancelButton, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
+						// Set ok button window font
+						SendMessage( g_hWndOkButton, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
-						// Select edit text
-						SendMessage( g_hWndEdit, EM_SETSEL, ( WPARAM )0, ( LPARAM )-1 );
+						// Calculate cancel button window position
+						nCancelButtonWindowLeft	= ( nOkButtonWindowLeft + INPUT_BOX_BUTTON_WINDOW_WIDTH + INPUT_BOX_WINDOW_SEPARATOR_SIZE );
 
-						// Focus on edit window
-						SetFocus( g_hWndEdit );
+						// Create cancel button window
+						g_hWndCancelButton = CreateWindowEx( INPUT_BOX_BUTTON_WINDOW_EXTENDED_STYLE, INPUT_BOX_BUTTON_WINDOW_CLASS_NAME, INPUT_BOX_CANCEL_BUTTON_WINDOW_TEXT, INPUT_BOX_BUTTON_WINDOW_STYLE, nCancelButtonWindowLeft, nButtonWindowTop, INPUT_BOX_BUTTON_WINDOW_WIDTH, INPUT_BOX_BUTTON_WINDOW_HEIGHT, hWndInputBox, ( HMENU )INPUT_BOX_CANCEL_BUTTON_WINDOW_ID, hInstance, NULL );
 
-					} // End of successfully created cancel button window
+						// Ensure that cancel button window was created
+						if( g_hWndCancelButton )
+						{
+							// Successfully created cancel button window
 
-				} // End of successfully created ok button window
+							// Set cancel button window font
+							SendMessage( g_hWndCancelButton, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
-			} // End of successfully created edit window
+							// Select edit text
+							SendMessage( g_hWndEdit, EM_SETSEL, ( WPARAM )0, ( LPARAM )-1 );
+
+							// Focus on edit window
+							SetFocus( g_hWndEdit );
+
+						} // End of successfully created cancel button window
+
+					} // End of successfully created ok button window
+
+				} // End of successfully created edit window
+
+			} // End of successfully created title window
 
 			// Break out of switch
 			break;
@@ -270,6 +288,39 @@ LRESULT CALLBACK InputBoxWndProc( HWND hWndInputBox, UINT uMessage, WPARAM wPara
 			break;
 
 		} // End of a command message
+		case WM_CTLCOLORSTATIC:
+		{
+			// A control color static message
+
+			// See if message is from title window
+			if( ( HWND )lParam == g_hWndTitle )
+			{
+				// Message is from title window
+				HDC hdcTitle;
+
+				// Get hdc
+				hdcTitle = ( HDC )wParam;
+
+				// Set title to transparent
+				SetBkMode( hdcTitle, TRANSPARENT );
+
+				// Update return value
+				lr = ( LRESULT )CreateSolidBrush( GetSysColor( INPUT_BOX_WINDOW_CLASS_BACKGROUND_COLOR ) );
+
+			} // End of message is from title window
+			else
+			{
+				// Message is not from title window
+
+				// Call default window procedure
+				lr = DefWindowProc( hWndInputBox, uMessage, wParam, lParam );
+
+			} // End of message is not from title window
+
+			// Break out of switch
+			break;
+
+		} // End of a control color static message
 		case WM_CLOSE:
 		{
 			// A close message

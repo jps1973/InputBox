@@ -11,7 +11,7 @@ int WINAPI WinMain( HINSTANCE, HINSTANCE, LPTSTR, int )
 	lstrcpy( lpszInputText, "I need input" );
 
 	// Get input
-	if( InputBox( NULL, lpszInputText ) )
+	if( InputBox( NULL, lpszInputText, "Please Input Some Text" ) )
 	{
 		// Successfully got input
 
