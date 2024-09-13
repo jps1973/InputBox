@@ -12,7 +12,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int )
 
 	// Allocate string memory
 	LPTSTR lpszInputText = new char[ STRING_LENGTH ];
-	
+
+	// Initialise input text
+	lstrcpy( lpszInputText, "Initial input text" );
+
 	// Show input box
 	if( InputBox( NULL, hInstance, "Input Some Text", lpszInputText ) )
 	{

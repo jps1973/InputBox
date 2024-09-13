@@ -2,6 +2,13 @@
 
 #include "InputBox.h"
 
+// Global variables
+static HWND g_hWndEdit;
+static HWND g_hWndGoButton;
+static HWND g_hWndCancelButton;
+static HINSTANCE g_hInstance;
+static LPTSTR g_lpszInputText;
+
 // Input box window procedure
 LRESULT CALLBACK InputBoxWndProc( HWND hWndInputBox, UINT uMessage, WPARAM wParam, LPARAM lParam )
 {
@@ -13,6 +20,27 @@ LRESULT CALLBACK InputBoxWndProc( HWND hWndInputBox, UINT uMessage, WPARAM wPara
 		case WM_CREATE:
 		{
 			// A create message
+			int nEditWindowWidth;
+
+			// Calculate edit window size
+			nEditWindowWidth = ( INPUT_BOX_WINDOW_WIDTH - ( INPUT_BOX_WINDOW_BORDER_SIZE + INPUT_BOX_WINDOW_BORDER_SIZE ) );
+
+			// Create edit window
+			g_hWndEdit = CreateWindowEx( INPUT_BOX_EDIT_WINDOW_EXTENDED_STYLE, INPUT_BOX_EDIT_WINDOW_CLASS_NAME, g_lpszInputText, INPUT_BOX_EDIT_WINDOW_STYLE, INPUT_BOX_WINDOW_BORDER_SIZE, INPUT_BOX_WINDOW_BORDER_SIZE, nEditWindowWidth, INPUT_BOX_EDIT_WINDOW_HEIGHT, hWndInputBox, ( HMENU )NULL, g_hInstance, NULL );
+			
+			// Ensure that edit window was created
+			if( g_hWndEdit )
+			{
+				// Successfully created edit window
+				HFONT hFont;
+
+				// Get font
+				hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
+
+				// Set edit window font
+				SendMessage( g_hWndEdit, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
+
+			} // End of successfully created edit window
 
 			// Break out of switch
 			break;
@@ -120,8 +148,17 @@ BOOL InputBox( HWND hWndParent, HINSTANCE hInstance, LPCTSTR lpszTitle, LPTSTR l
 		// Successfully registered input box window class
 		HWND hWndInputBox;
 
+		// Allocate global memory
+		g_lpszInputText = new char[ STRING_LENGTH ];
+
+		// Store initial input text
+		lstrcpy( g_lpszInputText, lpszInputText );
+
+		// Update global instance handle
+		g_hInstance = hInstance;
+
 		// Create input box window
-		hWndInputBox = CreateWindowEx( INPUT_BOX_WINDOW_EXTENDED_STYLE, INPUT_BOX_WINDOW_CLASS_NAME, INPUT_BOX_WINDOW_TITLE, INPUT_BOX_WINDOW_STYLE, CW_USEDEFAULT, CW_USEDEFAULT,  INPUT_BOX_WINDOW_WIDTH, INPUT_BOX_WINDOW_HEIGHT, NULL, NULL, hInstance, NULL );
+		hWndInputBox = CreateWindowEx( INPUT_BOX_WINDOW_EXTENDED_STYLE, INPUT_BOX_WINDOW_CLASS_NAME, lpszTitle, INPUT_BOX_WINDOW_STYLE, CW_USEDEFAULT, CW_USEDEFAULT,  INPUT_BOX_WINDOW_WIDTH, INPUT_BOX_WINDOW_HEIGHT, hWndParent, NULL, hInstance, NULL );
 
 		// Ensure that input box window was created
 		if( hWndInputBox )
@@ -155,6 +192,9 @@ BOOL InputBox( HWND hWndParent, HINSTANCE hInstance, LPCTSTR lpszTitle, LPTSTR l
 			MessageBox( NULL, INPUT_BOX_WINDOW_UNABLE_TO_CREATE_ERROR_MESSAGE, ERROR_MESSAGE_CAPTION, ( MB_OK | MB_ICONERROR ) );
 
 		} // End of unable to create input box window
+
+		// Free global memory
+		delete [] g_lpszInputText;
 
 	} // End of successfully registered input box window class
 	else
